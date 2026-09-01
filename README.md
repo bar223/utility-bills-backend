@@ -89,4 +89,21 @@ docker compose up -d
 - веб-консоль — http://localhost:9001
 
 Учётные данные задаются в `.env` (файл в репозиторий не попадает,
-образец — `.env.example`).
+образец — `.env.example`). Данные хранилища лежат в именованном томе
+`minio-data` внутри виртуального диска WSL, а не в каталоге проекта.
+
+### Бакет `communal-resources`
+
+Изображения ресурсов загружены в бакет `communal-resources` с анонимным
+доступом на чтение — на них ссылается поле `imageUrl`.
+
+| Объект | Ресурс |
+|---|---|
+| `electricity.webp` | Электроэнергия |
+| `heating.webp` | Отопление |
+| `cold-water.avif` | Холодное водоснабжение |
+| `gas-supply.avif` | Газоснабжение |
+| `waste-removal.jpg` | Вывоз ТКО |
+| `capital-repair.webp` | Капитальный ремонт |
+
+Пример ссылки: `http://localhost:9000/communal-resources/electricity.webp`
