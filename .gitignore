@@ -1,0 +1,25 @@
+# Зависимости
+node_modules/
+
+# Переменные окружения
+.env
+.env.local
+.env.*.local
+
+# Сборка
+dist/
+build/
+
+# Данные MinIO и прочие тома контейнеров
+volumes/
+
+# Логи
+*.log
+npm-debug.log*
+logs/
+
+# Служебные файлы ОС и редакторов
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
