@@ -11,15 +11,15 @@
     <div class="feed-page">
         <div class="feed-media">
             {{ if .Resource.VideoURL }}
-            <video src="{{ .Resource.VideoURL }}" poster="{{ .Resource.ImageURL }}" autoplay loop muted playsinline></video>
+            <video src="{{ .Resource.VideoURL }}" poster="{{ .Resource.DisplayImageURL }}" autoplay loop muted playsinline></video>
             {{ else }}
-            <img src="{{ .Resource.ImageURL }}" alt="{{ .Resource.Name }}">
+            <img src="{{ .Resource.DisplayImageURL }}" alt="{{ .Resource.Name }}">
             {{ end }}
 
             <div class="feed-side-actions">
                 <span class="feed-likes like-button">
                     {{ template "heart-icon" }}
-                    <span>{{ len .Resource.Likes }}</span>
+                    <span>{{ .Resource.LikesCount }}</span>
                 </span>
 
                 <a class="feed-next" href="/feed/{{ .Resource.ID }}?next=true" title="Следующая услуга">
@@ -35,6 +35,7 @@
         <div class="feed-info">
             <h1>{{ .Resource.Name }}</h1>
             <p>{{ .Resource.Description }} <span class="more">Ещё..</span></p>
+            <p class="norm">Норматив потребления: {{ .Resource.ConsumptionNorm }} {{ .Resource.MeasurementUnit }}</p>
         </div>
     </div>
 

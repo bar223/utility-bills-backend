@@ -7,6 +7,56 @@
 
 Фронтенд — репозиторий [utility-bills-frontend](https://github.com/bar223/utility-bills-frontend).
 
+## Лабораторная работа 2 — база данных
+
+Ветка: `lab2-database`
+
+Тема лабораторной — структура БД и её подключение к бэкенду. Коллекция
+в памяти из лабы 1 заменена на PostgreSQL через GORM.
+
+Сделано:
+
+- 3 таблицы (каскадное удаление не используется, статусы — soft delete):
+  `communal_resources`, `likes` (м-м пользователь-услуга), `users`;
+- поле по теме `consumptionNorm` (норматив потребления) добавлено к уже
+  существующему `tariffRate` — оба поля числовые, `tariffRate`
+  используется для фильтра на плитке;
+- 6 HTTP-методов: 3 GET через ORM (плитка, лента, черновик), создание
+  черновика через ORM (`POST /add`), публикация через ORM
+  (`POST /publish`), логическое удаление прямым SQL `UPDATE` без ORM
+  (`POST /delete-resource`);
+- миграции — `cmd/migrate` (`go run ./cmd/migrate`);
+- в БД гарантированно есть услуги во всех трёх статусах: `draft`,
+  `published` (×6), `deleted`.
+
+Инфраструктура — PostgreSQL и Adminer подняты в `docker-compose.yml`
+рядом с MinIO:
+
+```bash
+docker compose up -d
+go run ./cmd/migrate      # создаёт схему
+go run ./cmd/utility-bills
+```
+
+- PostgreSQL — `localhost:5433` (порт сдвинут с 5432 — на машине уже стоит
+  нативный PostgreSQL, чтобы не занимать его порт)
+- Adminer — http://localhost:8081 (система: PostgreSQL, сервер: `postgres`,
+  логин/пароль — из `.env`, база — `utility_bills`)
+
+### ER-диаграмма
+
+Таблицы для диаграммы в StarUML:
+
+- **communal_resources** — `id` PK, `name`, `description`, `status`,
+  `image_url`, `video_url`, `tariff_rate`, `consumption_norm`,
+  `measurement_unit`, `created_at`, `published_at`, `creator_id` FK → users.id
+- **likes** — `id` PK, `user_id` FK → users.id, `communal_resource_id`
+  FK → communal_resources.id (уникальная пара)
+- **users** — `id` PK, `login`, `password`, `is_moderator`
+
+Связи: `users` 1 — * `communal_resources` (создатель), `users` 1 — *
+`likes` * — 1 `communal_resources`.
+
 ## Лабораторная работа 1 — SSR
 
 Ветка: `lab1-ssr`

@@ -15,17 +15,23 @@
 
         <div class="grid">
             {{ range .Resources }}
-            <a class="card" href="/feed/{{ .ID }}">
-                <img src="{{ .ImageURL }}" alt="{{ .Name }}">
-                <div class="info">
-                    <p class="name">{{ .Name }}</p>
-                    <p class="tariff">{{ .TariffRate }} руб/{{ .MeasurementUnit }}</p>
-                    <p class="likes">
-                    <span class="like-button">{{ template "heart-icon" }}</span>
-                    {{ len .Likes }}
-                </p>
-                </div>
-            </a>
+            <div class="card-wrap">
+                <a class="card" href="/feed/{{ .ID }}">
+                    <img src="{{ .DisplayImageURL }}" alt="{{ .Name }}">
+                    <div class="info">
+                        <p class="name">{{ .Name }}</p>
+                        <p class="tariff">{{ .TariffRate }} руб/{{ .MeasurementUnit }}</p>
+                        <p class="likes">
+                            <span class="like-button">{{ template "heart-icon" }}</span>
+                            {{ .LikesCount }}
+                        </p>
+                    </div>
+                </a>
+                <form action="/delete-resource" method="post" class="delete-form">
+                    <input type="hidden" name="id" value="{{ .ID }}">
+                    <button type="submit" title="Удалить услугу">✕</button>
+                </form>
+            </div>
             {{ end }}
         </div>
     </main>
