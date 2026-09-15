@@ -330,7 +330,8 @@ a {
 /* ---------- страница «Добавление» ---------- */
 
 .add-page {
-    padding: 24px 16px;
+    padding: 14px 16px;
+    overflow: hidden; /* без прокрутки, как на плитке */
 }
 
 .upload-row {
@@ -361,9 +362,9 @@ a {
     gap: 6px;
     border: 2px solid var(--accent);
     border-radius: 14px;
-    padding: 12px 16px;
-    margin-bottom: 16px;
-    font-size: 16px;
+    padding: 8px 14px;
+    margin-bottom: 10px;
+    font-size: 15px;
 }
 
 .field.description {
@@ -404,7 +405,7 @@ a {
 .primary-btn {
     display: block;
     width: 100%;
-    padding: 14px;
+    padding: 10px;
     border: none;
     border-radius: 14px;
     background: var(--btn-navy);
