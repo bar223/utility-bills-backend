@@ -9,6 +9,8 @@ node_modules/
 # Сборка
 dist/
 build/
+*.exe
+*.exe~
 
 # Данные MinIO и прочие тома контейнеров
 volumes/

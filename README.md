@@ -1,22 +1,32 @@
-# Квитанция по квартплате — backend
+# Utility Bills — backend
 
 Учебный проект по дисциплине **«Разработка Интернет Приложений» (РИП), 2026**.
 
 Тема варианта — **«Квитанция по квартплате»**. Предметная область: начисления за
 коммунальные ресурсы, из которых складывается месячная квитанция жильца.
 
-## Лабораторная работа 1
+Фронтенд — репозиторий [utility-bills-frontend](https://github.com/bar223/utility-bills-frontend).
 
-Ветка: `rip2026-lab1-kvartplata`
+## Лабораторная работа 1 — SSR
 
-**Статус: design + инфраструктура.** На этом этапе прикладной код не пишется.
+Ветка: `lab1-ssr`
+
+Тема лабораторной — серверный рендеринг (SSR): три страницы приложения
+(«Плитка», «Лента», «Добавление») собираются на сервере через
+`html/template` и отдаются готовым HTML, без клиентского JavaScript.
+
 Сделано:
 
-- инициализирован репозиторий и рабочая ветка;
-- спроектирована доменная модель (см. ниже);
-- размечена структура каталогов под будущий код (каталоги содержат только `.gitkeep`);
-- поднята инфраструктура объектного хранилища MinIO через `docker-compose.yml`;
-- заведён каталог `docs/lab1/` для скриншотов защиты.
+- веб-сервис на Go (Gin + `html/template`), архитектура по методическим
+  указаниям курса: `cmd` → `internal/api` → `internal/app/handler` →
+  `internal/app/repository`;
+- доменная коллекция `CommunalResource` в памяti, без БД (требование
+  лабы 1) — 6 опубликованных услуг + 1 черновик;
+- три GET-метода: список с фильтром по тарифу, лента по ID с переходом
+  «следующая услуга», получение черновика;
+- вёрстка по макету Figma, изображения и видео — из MinIO;
+- поднята инфраструктура объектного хранилища MinIO через
+  `docker-compose.yml`.
 
 ## Доменная модель
 
@@ -32,7 +42,7 @@
 | `measurementUnit` | string | Единица измерения |
 | `description` | text | Подробное описание ресурса |
 | `imageUrl` | string | Ссылка на изображение (хранится в MinIO) |
-| `videoUrl` | string | Ссылка на видеоматериал |
+| `videoUrl` | string | Ссылка на видеоматериал (хранится в MinIO) |
 | `likes` | ID[] | Массив идентификаторов пользователей, отметивших ресурс |
 | `status` | enum | `draft` / `published` / `deleted` |
 
@@ -46,7 +56,8 @@
 ### MonthlyReceipt — месячная квитанция
 
 Квитанция за расчётный период по одному лицевому счёту. Агрегирует записи
-о потреблении и содержит итоговую сумму к оплате.
+о потреблении и содержит итоговую сумму к оплате. Появится в следующих
+лабораторных работах вместе с БД.
 
 ### ConsumptionRecord — запись о потреблении
 
@@ -56,54 +67,69 @@
 
 Связь: `MonthlyReceipt` 1 — * `ConsumptionRecord` * — 1 `CommunalResource`.
 
-## Структура каталогов
+## Структура проекта
 
 ```
-src/
-  controllers/    обработчики HTTP-запросов
-  models/         описание сущностей и схема БД
-  views/          шаблоны страниц
-  repositories/   доступ к данным
-  dto/            структуры запросов и ответов
-  migrations/     миграции схемы БД
-  storage/minio/  интеграция с объектным хранилищем
-  config/         конфигурация приложения
-docs/lab1/        скриншоты защиты лабораторной работы 1
+cmd/utility-bills/        точка входа (main.go)
+internal/
+  api/                     сборка веб-сервиса: маршруты, шаблоны, статика
+  app/
+    handler/               обработчики HTTP-запросов
+    repository/            доменная коллекция CommunalResource
+templates/                 html/template-шаблоны трёх страниц
+resources/styles/          CSS
+docs/lab1/                 скриншоты защиты лабораторной работы 1
 ```
 
-Внутри `controllers`, `models`, `views`, `repositories` и `dto` каталоги
-разделены по сущностям: `communal-resource`, `monthly-receipt`,
-`consumption-record`.
-
-## Инфраструктура
-
-Объектное хранилище MinIO для изображений ресурсов поднимается через
-`docker-compose.yml` (запускается в WSL2):
+## Запуск
 
 ```bash
 cp .env.example .env
-docker compose up -d
+docker compose up -d   # поднимает MinIO
+go run ./cmd/utility-bills
 ```
 
+Приложение слушает `:8080`:
+
+- `/` — плитка, список опубликованных услуг, фильтр по тарифу (`?tariff=`)
+- `/feed/:id` — лента, переход к следующей услуге через `?next=true`
+  (после последней — снова первая)
+- `/add` — черновик
+
+## Инфраструктура: MinIO
+
+Объектное хранилище MinIO разворачивается в Docker Desktop по методическим
+указаниям курса ([Установка и администрирование Minio](https://github.com/iu5git/Web/blob/main/tutorials/minio/MinIO_bucket_setup_ReadMe.md)).
+
+- контейнер — `utility-bills-minio`
 - S3 API — http://localhost:9000
-- веб-консоль — http://localhost:9001
+- веб-консоль — http://localhost:9001 (логин `root`, пароль `rootpassword`)
 
 Учётные данные задаются в `.env` (файл в репозиторий не попадает,
 образец — `.env.example`). Данные хранилища лежат в именованном томе
-`minio-data` внутри виртуального диска WSL, а не в каталоге проекта.
+`minio-data`, а не в каталоге проекта.
 
-### Бакет `communal-resources`
+### Бакет `utility-bills`
 
-Изображения ресурсов загружены в бакет `communal-resources` с анонимным
-доступом на чтение — на них ссылается поле `imageUrl`.
+По умолчанию бакеты в MinIO приватные. Бакет создаётся и открывается
+на чтение командами:
 
-| Объект | Ресурс |
-|---|---|
-| `electricity.webp` | Электроэнергия |
-| `heating.webp` | Отопление |
-| `cold-water.avif` | Холодное водоснабжение |
-| `gas-supply.avif` | Газоснабжение |
-| `waste-removal.jpg` | Вывоз ТКО |
-| `capital-repair.webp` | Капитальный ремонт |
+```bash
+docker exec -it utility-bills-minio mc alias set myminio http://localhost:9000 root rootpassword
+docker exec -it utility-bills-minio mc mb myminio/utility-bills
+docker exec -it utility-bills-minio mc anonymous set public myminio/utility-bills
+```
 
-Пример ссылки: `http://localhost:9000/communal-resources/electricity.webp`
+Изображения и видео ресурсов загружены с ключами на латинице — на них
+ссылаются поля `imageUrl` и `videoUrl`:
+
+| Ресурс | Изображение | Видео |
+|---|---|---|
+| Электроэнергия | `electricity.webp` | `electricity.mp4` |
+| Отопление | `heating.webp` | `heating.mp4` |
+| Холодное водоснабжение | `cold-water.avif` | `cold-water.mp4` |
+| Газоснабжение | `gas-supply.avif` | `gas-supply.mp4` |
+| Вывоз ТКО | `waste-removal.jpg` | `waste-removal.mp4` |
+| Капитальный ремонт | `capital-repair.webp` | `capital-repair.mp4` |
+
+Пример ссылки: `http://localhost:9000/utility-bills/electricity.webp`

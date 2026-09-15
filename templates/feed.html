@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ .Resource.Name }} — Лента</title>
+    <link rel="stylesheet" href="/static/styles/app.css">
+</head>
+<body>
+<div class="app-frame">
+    <div class="feed-page">
+        <div class="feed-media">
+            {{ if .Resource.VideoURL }}
+            <video src="{{ .Resource.VideoURL }}" poster="{{ .Resource.ImageURL }}" autoplay loop muted playsinline></video>
+            {{ else }}
+            <img src="{{ .Resource.ImageURL }}" alt="{{ .Resource.Name }}">
+            {{ end }}
+
+            <div class="feed-side-actions">
+                <span class="feed-likes like-button">
+                    {{ template "heart-icon" }}
+                    <span>{{ len .Resource.Likes }}</span>
+                </span>
+
+                <a class="feed-next" href="/feed/{{ .Resource.ID }}?next=true" title="Следующая услуга">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 4v16M6 14l6 6 6-6"/>
+                    </svg>
+                </a>
+            </div>
+
+            <div class="feed-tariff">{{ .Resource.TariffRate }} руб/{{ .Resource.MeasurementUnit }}</div>
+        </div>
+
+        <div class="feed-info">
+            <h1>{{ .Resource.Name }}</h1>
+            <p>{{ .Resource.Description }} <span class="more">Ещё..</span></p>
+        </div>
+    </div>
+
+    {{ template "tabbar" }}
+</div>
+</body>
+</html>

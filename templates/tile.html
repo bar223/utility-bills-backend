@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Квитанция по квартплате — Плитка</title>
+    <link rel="stylesheet" href="/static/styles/app.css">
+</head>
+<body>
+<div class="app-frame">
+    <main class="tile-page">
+        <form class="tariff-form" action="/" method="get">
+            <input type="number" step="0.01" name="tariff" placeholder="Тариф:" value="{{ .Tariff }}">
+        </form>
+
+        <div class="grid">
+            {{ range .Resources }}
+            <a class="card" href="/feed/{{ .ID }}">
+                <img src="{{ .ImageURL }}" alt="{{ .Name }}">
+                <div class="info">
+                    <p class="name">{{ .Name }}</p>
+                    <p class="tariff">{{ .TariffRate }} руб/{{ .MeasurementUnit }}</p>
+                    <p class="likes">
+                    <span class="like-button">{{ template "heart-icon" }}</span>
+                    {{ len .Likes }}
+                </p>
+                </div>
+            </a>
+            {{ end }}
+        </div>
+    </main>
+
+    {{ template "tabbar" }}
+</div>
+</body>
+</html>
