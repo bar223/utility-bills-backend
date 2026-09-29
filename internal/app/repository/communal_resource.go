@@ -25,38 +25,40 @@ func (r *Repository) GetCommunalResources(maxTariffRate *float64) ([]ds.Communal
 	return resources, nil
 }
 
-// GetCommunalResourceFeedItem — услуга для страницы «Лента». Если next
-// равен false, возвращается сама услуга по id (id == 0 — первая
+// GetCommunalResourceFeedItem — услуга для страницы «Лента». БД возвращает
+// сразу одну строку (не более одного дополнительного запроса при переходе
+// через границу последней услуги) — без выборки всего списка и фильтрации
+// массивом в коде, как того требует методичка.
+//
+// Если next равен false, возвращается сама услуга по id (id == 0 — первая
 // опубликованная, для перехода из панели вкладок). Если next равен true —
 // следующая после неё опубликованная услуга, после последней — снова первая.
 func (r *Repository) GetCommunalResourceFeedItem(id uint, next bool) (ds.CommunalResource, error) {
-	var published []ds.CommunalResource
-	if err := r.db.Where("status = ?", ds.StatusPublished).Order("id").Find(&published).Error; err != nil {
-		return ds.CommunalResource{}, err
-	}
-	if len(published) == 0 {
-		return ds.CommunalResource{}, gorm.ErrRecordNotFound
-	}
+	var resource ds.CommunalResource
 
-	if id == 0 {
-		return published[0], nil
-	}
+	switch {
+	case id == 0:
+		// Переход из панели вкладок — первая опубликованная услуга.
+		err := r.db.Where("status = ?", ds.StatusPublished).
+			Order("id").First(&resource).Error
+		return resource, err
 
-	index := -1
-	for i, res := range published {
-		if res.ID == id {
-			index = i
-			break
+	case next:
+		// Следующая после id услуга одним запросом.
+		err := r.db.Where("status = ? AND id > ?", ds.StatusPublished, id).
+			Order("id").First(&resource).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// После последней услуги — зацикливаемся на первую.
+			err = r.db.Where("status = ?", ds.StatusPublished).
+				Order("id").First(&resource).Error
 		}
-	}
-	if index == -1 {
-		return ds.CommunalResource{}, gorm.ErrRecordNotFound
-	}
+		return resource, err
 
-	if next {
-		index = (index + 1) % len(published)
+	default:
+		err := r.db.Where("status = ? AND id = ?", ds.StatusPublished, id).
+			First(&resource).Error
+		return resource, err
 	}
-	return published[index], nil
 }
 
 // GetCommunalResourceDraft — черновик текущего создателя (не более одного
